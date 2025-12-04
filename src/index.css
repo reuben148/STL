@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-stl-blue: #007BFF;
+  --color-stl-orange: #FF8C00;
+  --color-stl-dark: #121212;
+  --color-stl-card: #1E1E1E;
+  
+  --font-sans: 'Inter', sans-serif;
+}
+
+body {
+  @apply bg-stl-dark text-white font-sans;
+}
