@@ -1,4 +1,7 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db, auth } from '../firebase';
+import { collection, onSnapshot, addDoc } from 'firebase/firestore';
+import { signInAnonymously } from 'firebase/auth';
 
 const ShopContext = createContext();
 
@@ -10,8 +13,29 @@ export const ShopProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
+  // Real-time subscription to Firestore & Anonymous Auth
+  useEffect(() => {
+    // Sign in anonymously to satisfy default security rules
+    signInAnonymously(auth).catch(err => console.error("Auth failed:", err));
+
+    const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+      const productsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setProducts(productsData);
+    }, (error) => {
+      console.error("Error fetching products:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const login = (email, password) => {
-    if (email === "stl123@gmail.com" && password === "STYLEWITHTRILLION") {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+    
+    if (cleanEmail === "stl123@gmail.com" && cleanPassword === "STYLEWITHTRILLION") {
       setIsAdminLoggedIn(true);
       return true;
     }
@@ -21,8 +45,6 @@ export const ShopProvider = ({ children }) => {
   const logout = () => {
     setIsAdminLoggedIn(false);
   };
-
-  // ... rest of context ...
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -49,8 +71,14 @@ export const ShopProvider = ({ children }) => {
     }).filter(item => item.quantity > 0));
   };
 
-  const addProduct = (newProduct) => {
-    setProducts(prev => [...prev, { ...newProduct, id: Date.now() }]);
+  // Deprecated: Admin page now handles adding directly to Firestore
+  // Kept for compatibility if needed, but Admin should use addDoc directly or via this context
+  const addProduct = async (newProduct) => {
+    try {
+      await addDoc(collection(db, 'products'), newProduct);
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);

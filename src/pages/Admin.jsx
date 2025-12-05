@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { motion } from 'framer-motion';
-import { Upload, Check } from 'lucide-react';
+import { Upload, Check, Loader } from 'lucide-react';
 
 const Admin = () => {
   const { addProduct } = useShop();
@@ -11,26 +11,80 @@ const Admin = () => {
     image: '',
     description: ''
   });
+  const [imageFile, setImageFile] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageFile(file);
       const imageUrl = URL.createObjectURL(file);
       setFormData({ ...formData, image: imageUrl });
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    addProduct({
-      ...formData,
-      price: Number(formData.price),
-      colors: [] // Deprecated but keeping structure for now
+  // Helper to convert file to Base64 with resizing
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Compress to JPEG at 0.7 quality
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(dataUrl);
+        };
+      };
+      reader.onerror = (error) => reject(error);
     });
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
-    setFormData({ name: '', price: '', image: '', description: '' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      let imageUrl = formData.image;
+
+      if (imageFile) {
+        console.log("Converting image...");
+        // Convert to Base64 string instead of uploading to Storage
+        imageUrl = await convertToBase64(imageFile);
+      }
+
+      console.log("Adding to Firestore...");
+      await addProduct({
+        ...formData,
+        image: imageUrl,
+        price: Number(formData.price),
+        colors: [],
+        createdAt: new Date()
+      });
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      setFormData({ name: '', price: '', image: '', description: '' });
+      setImageFile(null);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setErrorMsg("Upload failed: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,6 +97,11 @@ const Admin = () => {
         onSubmit={handleSubmit}
         className="bg-stl-card p-8 rounded-3xl border border-white/10 space-y-6"
       >
+        {errorMsg && (
+          <div className="bg-red-500/20 border border-red-500 text-red-100 p-4 rounded-xl text-center font-bold">
+            {errorMsg}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Combo Name</label>
           <input 
@@ -98,10 +157,11 @@ const Admin = () => {
 
         <button 
           type="submit"
-          className="w-full bg-white text-stl-dark font-black uppercase tracking-widest py-4 rounded-xl hover:bg-stl-blue hover:text-white transition-all flex items-center justify-center gap-2"
+          disabled={loading}
+          className="w-full bg-white text-stl-dark font-black uppercase tracking-widest py-4 rounded-xl hover:bg-stl-blue hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {success ? <Check className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
-          {success ? 'Uploaded!' : 'Upload Combo'}
+          {loading ? <Loader className="w-6 h-6 animate-spin" /> : (success ? <Check className="w-6 h-6" /> : <Upload className="w-6 h-6" />)}
+          {loading ? 'Uploading...' : (success ? 'Uploaded!' : 'Upload Combo')}
         </button>
       </motion.form>
     </div>

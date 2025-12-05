@@ -24,7 +24,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
-            <Route path="/login" element={<Login />} />
             <Route 
               path="/admin" 
               element={
@@ -33,6 +32,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </Layout>
         <CartDrawer />
