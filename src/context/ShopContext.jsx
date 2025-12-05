@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { collection, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
 const ShopContext = createContext();
@@ -81,6 +81,14 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
+  const deleteProduct = async (productId) => {
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
+
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -94,6 +102,7 @@ export const ShopProvider = ({ children }) => {
       removeFromCart,
       updateQuantity,
       addProduct,
+      deleteProduct,
       cartTotal,
       cartCount,
       isAdminLoggedIn,

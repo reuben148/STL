@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { motion } from 'framer-motion';
-import { Upload, Check, Loader } from 'lucide-react';
+import { Upload, Check, Loader, Trash2 } from 'lucide-react';
 
 const Admin = () => {
-  const { addProduct } = useShop();
+  const { addProduct, products, deleteProduct } = useShop();
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -91,79 +91,122 @@ const Admin = () => {
     <div className="container mx-auto px-4 py-12 max-w-2xl">
       <h1 className="text-4xl font-black italic mb-8 text-center">ADMIN <span className="text-stl-orange">UPLOAD</span></h1>
 
-      <motion.form 
+ 
+      <motion.div // Added motion.div wrapper
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        onSubmit={handleSubmit}
-        className="bg-stl-card p-8 rounded-3xl border border-white/10 space-y-6"
       >
-        {errorMsg && (
-          <div className="bg-red-500/20 border border-red-500 text-red-100 p-4 rounded-xl text-center font-bold">
-            {errorMsg}
-          </div>
-        )}
-        <div>
-          <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Combo Name</label>
-          <input 
-            type="text" 
-            required
-            value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})}
-            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors"
-            placeholder="e.g. Neon Pulse"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Price (₦)</label>
-          <input 
-            type="number" 
-            required
-            value={formData.price}
-            onChange={e => setFormData({...formData, price: e.target.value})}
-            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors"
-            placeholder="0.00"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Image</label>
-          <div className="flex flex-col gap-4">
-            <input 
-              type="file" 
-              accept="image/*"
-              required={!formData.image}
-              onChange={handleImageChange}
-              className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-stl-blue file:text-white hover:file:bg-blue-600"
-            />
-            {formData.image && (
-              <div className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10">
-                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Description</label>
-          <textarea 
-            required
-            value={formData.description}
-            onChange={e => setFormData({...formData, description: e.target.value})}
-            className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors h-32 resize-none"
-            placeholder="Describe the vibe..."
-          />
-        </div>
-
-        <button 
-          type="submit"
-          disabled={loading}
-          className="w-full bg-white text-stl-dark font-black uppercase tracking-widest py-4 rounded-xl hover:bg-stl-blue hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        <form // Changed motion.form to form
+          onSubmit={handleSubmit}
+          className="bg-stl-card p-8 rounded-3xl border border-white/10 space-y-6"
         >
-          {loading ? <Loader className="w-6 h-6 animate-spin" /> : (success ? <Check className="w-6 h-6" /> : <Upload className="w-6 h-6" />)}
-          {loading ? 'Uploading...' : (success ? 'Uploaded!' : 'Upload Combo')}
-        </button>
-      </motion.form>
+          {errorMsg && (
+            <div className="bg-red-500/20 border border-red-500 text-red-100 p-4 rounded-xl text-center font-bold">
+              {errorMsg}
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Combo Name</label>
+            <input 
+              type="text" 
+              required
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors"
+              placeholder="e.g. Neon Pulse"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Price (₦)</label>
+            <input 
+              type="number" 
+              required
+              value={formData.price}
+              onChange={e => setFormData({...formData, price: e.target.value})}
+              className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Image</label>
+            <div className="flex flex-col gap-4">
+              <input 
+                type="file" 
+                accept="image/*"
+                required={!formData.image}
+                onChange={handleImageChange}
+                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-stl-blue file:text-white hover:file:bg-blue-600"
+              />
+              {formData.image && (
+                <div className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10">
+                  <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-gray-400">Description</label>
+            <textarea 
+              required
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-stl-blue transition-colors h-32 resize-none"
+              placeholder="Describe the vibe..."
+            />
+          </div>
+
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full bg-white text-stl-dark font-black uppercase tracking-widest py-4 rounded-xl hover:bg-stl-blue hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader className="w-6 h-6 animate-spin" /> : (success ? <Check className="w-6 h-6" /> : <Upload className="w-6 h-6" />)}
+            {loading ? 'Uploading...' : (success ? 'Uploaded!' : 'Upload Combo')}
+          </button>
+        </form>
+      </motion.div>
+
+      {/* Product List Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mt-12 w-full max-w-2xl"
+      >
+        <h2 className="text-2xl font-black italic mb-6">MANAGE <span className="text-stl-blue">DROPS</span></h2>
+        <div className="space-y-4">
+          {products.map(product => (
+            <div key={product.id} className="bg-stl-card p-4 rounded-xl border border-white/10 flex items-center justify-between group hover:border-stl-blue/50 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-black/50">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{product.name}</h3>
+                  <p className="text-stl-blue font-mono">₦{product.price.toLocaleString()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this drop?')) {
+                    deleteProduct(product.id);
+                  }
+                }}
+                className="p-3 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                title="Delete Drop"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          ))}
+          {products.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No drops uploaded yet.</p>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };
